@@ -1,0 +1,32 @@
+name: Fetch NVD Data
+
+on: [push]  # Trigger on push events (you can adjust this)
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest  # Replace with your desired runner
+
+    steps:
+      - uses: actions/checkout@v3  # Checkout the repository
+
+      - name: Install dependencies (if needed for your chosen tool)
+        run: |
+          # Install cURL, jq, or another suitable tool for API calls
+          sudo apt-get update
+          sudo apt-get install -y curl jq
+
+      - name: Get NVD data (replace with specific API endpoint and parameters)
+        run: |
+          # Change URL and parameters based on NVD API documentation
+          curl -sSL "https://api.nvd.nist.gov/vuln/v2/vulnerabilities?resultsPerPage=100" | jq -r '.results[]' > cves.json
+
+      - name: Process NVD data (modify logic based on your desired file structure)
+        run: |
+          jq -r '.cve.CVE_data[0].cve_id' cves.json | while read -r cve_id; do
+            mkdir -p "cves/$cve_id"  # Create folder for each CVE
+            # Fetch details for each CVE (replace with specific API endpoint)
+            curl -sSL "https://api.nvd.nist.gov/vuln/v2/vulnerabilities/$cve_id" | jq '.' > "cves/$cve_id/$cve_id.json"
+          done
+
+      - name: (Optional) Clean up temporary files (if needed)
+        run: rm cves.json
